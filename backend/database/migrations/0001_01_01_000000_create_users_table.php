@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
             $table->string('name');
+            $table->string('username', 100)->unique();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
@@ -27,6 +28,9 @@ return new class extends Migration
             $table->timestamp('otp_expires_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
+
+            //indexes
+            $table->index(['username','rider_type', 'status']);
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

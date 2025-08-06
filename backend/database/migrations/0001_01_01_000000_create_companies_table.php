@@ -21,6 +21,9 @@ return new class extends Migration
             $table->string('subdomain')->nullable();
             $table->enum('status', ['active','pending','suspended'])->default('pending');
             $table->timestamps();
+
+            //indexes
+            $table->index('status');
         });
     }
 

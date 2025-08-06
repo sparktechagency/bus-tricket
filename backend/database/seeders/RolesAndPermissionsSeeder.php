@@ -146,6 +146,8 @@ class RolesAndPermissionsSeeder extends Seeder
             [
                 'company_id' => $defaultCompany->id,
                 'name' => 'Super Admin',
+                'username' => 'superadmin',
+                'email_verified_at' => now(),
                 'password' => \Illuminate\Support\Facades\Hash::make('password'), // Change this later.
                 'rider_type' => 'Adult',
                 'status' => 'Active',

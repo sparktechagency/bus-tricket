@@ -27,4 +27,8 @@ class RegisterRequest extends FormRequest
             'password' => 'required|string|min:8|confirmed',
         ];
     }
+
+    //api error response
+
+    
 }
