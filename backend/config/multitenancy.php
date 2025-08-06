@@ -17,21 +17,8 @@ return [
      *
      * This class should extend `Spatie\Multitenancy\TenantFinder\TenantFinder`.
      */
-    'tenant_finder' => \Spatie\Multitenancy\TenantFinder\ChainTenantFinder::class,
+    'tenant_finder' => \App\TenantFinder\ChainedTenantFinder::class,
 
-    /*
-     * These finders will be used by the ChainTenantFinder to find the tenant in sequence.
-     */
-    'tenant_finders' => [
-        // 1. First, it will try to find a tenant by subdomain (for the Web Dashboard).
-        \Spatie\Multitenancy\TenantFinder\SubdomainTenantFinder::class,
-
-        // 2. If no subdomain is found, it will try to find a tenant by a request header (for the API).
-        \Spatie\Multitenancy\TenantFinder\RequestHeaderTenantFinder::class,
-
-        // 3. Finally, if the user is logged in, it will try to find a tenant from the user's company_id.
-        \Spatie\Multitenancy\TenantFinder\UserTenantFinder::class,
-    ],
 
     /*
      * The name of the key that will be used to retrieve the tenant id from the request header.
