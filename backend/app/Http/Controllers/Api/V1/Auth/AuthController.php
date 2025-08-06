@@ -7,9 +7,11 @@ use App\Http\Requests\Auth\RegisterRequest;
 use App\Services\AuthService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use App\Traits\FileUploadTrait;
 
 class AuthController extends Controller
 {
+    use FileUploadTrait;
     protected AuthService $authService;
 
     public function __construct(AuthService $authService)
@@ -19,6 +21,11 @@ class AuthController extends Controller
 
     public function register(RegisterRequest $request)
     {
+        //avatar image upload
+        $imagePath = $this->handleFileUpload($request, 'avatar', 'avatars');
+        if ($imagePath) {
+            $request->merge(['avatar' => $imagePath]);
+        }
         $this->authService->register($request->validated());
         return response_success('User registered. Please check your email for verification.', [], 201);
     }

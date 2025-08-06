@@ -18,13 +18,23 @@ class AuthService
      */
     public function register(array $data): User
     {
+        // Check if username was provided. If not, generate one.
+        if (empty($data['username'])) {
+            $data['username'] = $this->generateUniqueUsername($data['name']);
+        }
         $otp = random_int(100000, 999999);
         $token = Str::random(64);
 
         $user = User::create([
             'name' => $data['name'],
+            'username' => $data['username'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
+            'rider_type' => $data['rider_type'],
+            'phone_number' => $data['phone_number'] ?? null,
+            'avatar' => $data['avatar'] ?? null,
+            'address' => $data['address'] ?? null,
+            'status' => 'active',
             'otp' => $otp,
             'verification_token' => $token,
             'otp_expires_at' => Carbon::now()->addMinutes(10),
@@ -34,6 +44,34 @@ class AuthService
         $user->notify(new SendOtpNotification($otp, $token, 'verify your account', '/verify-email'));
 
         return $user;
+    }
+
+    /**
+     * Generates a unique username from the user's full name.
+     * It ensures the generated username does not already exist in the database.
+     *
+     * @param string $name The user's full name.
+     * @return string A unique username.
+     */
+    private function generateUniqueUsername(string $name): string
+    {
+        // Create a base username from the name (e.g., "Test User" -> "testuser")
+        $username = Str::slug($name, '');
+
+        // Check if this base username already exists
+        if (!User::where('username', $username)->exists()) {
+            return $username;
+        }
+
+        // If it exists, append a number until a unique username is found
+        $i = 1;
+        while (true) {
+            $newUsername = $username . $i;
+            if (!User::where('username', $newUsername)->exists()) {
+                return $newUsername;
+            }
+            $i++;
+        }
     }
 
     /**
@@ -107,7 +145,7 @@ class AuthService
 
         DB::table('password_reset_tokens')
             ->where('email', $data['email'])
-            ->update(['token' => Hash::make($resetSessionToken)]); 
+            ->update(['token' => Hash::make($resetSessionToken)]);
 
         return $resetSessionToken;
     }
