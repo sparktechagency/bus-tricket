@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('password');
             $table->string('phone_number')->nullable();
             $table->string('avatar')->nullable(); // Path to user avatar
+            $table->text('address')->nullable();
             $table->enum('rider_type', ['adult', 'child', 'student'])->default('adult');
             $table->enum('status', ['active', 'suspended', 'pending'])->default('pending');
             $table->string('otp')->nullable();

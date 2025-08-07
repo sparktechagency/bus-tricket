@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
+// use Spatie\Multitenancy\Contracts\IsTenant;
+use Spatie\Multitenancy\Models\Tenant;
+
+
 
 class AuthService
 {
@@ -18,22 +22,70 @@ class AuthService
      */
     public function register(array $data): User
     {
+        // Check if username was provided. If not, generate one.
+        if (empty($data['username'])) {
+            $data['username'] = $this->generateUniqueUsername($data['name']);
+        }
         $otp = random_int(100000, 999999);
         $token = Str::random(64);
 
+        $currentTenant = Tenant::current();
+
+        if (!$currentTenant) {
+            throw new \Exception('No tenant found for the current request.');
+        }
+
         $user = User::create([
+            'company_id' => $currentTenant->getKey(),
             'name' => $data['name'],
+            'username' => $data['username'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
+            'rider_type' => $data['rider_type'],
+            'phone_number' => $data['phone_number'] ?? null,
+            'avatar' => $data['avatar'] ?? null,
+            'address' => $data['address'] ?? null,
+            'status' => 'active',
             'otp' => $otp,
             'verification_token' => $token,
             'otp_expires_at' => Carbon::now()->addMinutes(10),
         ]);
 
-        $user->assignRole('user');
+        $user->assignRole('Passenger');
         $user->notify(new SendOtpNotification($otp, $token, 'verify your account', '/verify-email'));
 
+        // Create a wallet for the new passenger
+        $user->wallet()->create(['balance' => 0]);
+
         return $user;
+    }
+
+    /**
+     * Generates a unique username from the user's full name.
+     * It ensures the generated username does not already exist in the database.
+     *
+     * @param string $name The user's full name.
+     * @return string A unique username.
+     */
+    private function generateUniqueUsername(string $name): string
+    {
+        // Create a base username from the name (e.g., "Test User" -> "testuser")
+        $username = Str::slug($name, '');
+
+        // Check if this base username already exists
+        if (!User::where('username', $username)->exists()) {
+            return $username;
+        }
+
+        // If it exists, append a number until a unique username is found
+        $i = 1;
+        while (true) {
+            $newUsername = $username . $i;
+            if (!User::where('username', $newUsername)->exists()) {
+                return $newUsername;
+            }
+            $i++;
+        }
     }
 
     /**
@@ -75,7 +127,7 @@ class AuthService
             throw new \Exception('Verification code/link has expired.');
         }
 
-        if (($data['otp'] && $user->otp != $data['otp']) || ($data['token'] && $user->verification_token != $data['token'])) {
+        if ((isset($data['otp']) && $data['otp'] && $user->otp != $data['otp']) || (isset($data['token']) && $data['token'] && $user->verification_token != $data['token'])) {
             throw new \Exception('Invalid verification code or token.');
         }
 
@@ -107,7 +159,7 @@ class AuthService
 
         DB::table('password_reset_tokens')
             ->where('email', $data['email'])
-            ->update(['token' => Hash::make($resetSessionToken)]); 
+            ->update(['token' => Hash::make($resetSessionToken)]);
 
         return $resetSessionToken;
     }
@@ -204,21 +256,7 @@ class AuthService
      */
     public function updateProfile(User $user, array $data): User
     {
-        // Validation rule to check for unique email
-        validator($data, [
-            'name' => 'sometimes|required|string|max:255',
-            'email' => [
-                'sometimes',
-                'required',
-                'string',
-                'email',
-                'max:255',
-                Rule::unique('users')->ignore($user->id),
-            ],
-        ])->validate();
-
         $user->update($data);
-
         return $user;
     }
 }

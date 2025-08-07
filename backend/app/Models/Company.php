@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Spatie\Multitenancy\Models\Tenant;
+use Spatie\Permission\Traits\HasRoles;
 
-class Company extends Model implements Tenant
+class Company extends Tenant
 {
-    protected $gruarded = ['id'];
+    use HasRoles;
+
+    protected $guarded = ['id'];
 
 
     //tenant key name methods
