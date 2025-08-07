@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
+// use Spatie\Multitenancy\Contracts\IsTenant;
+use Spatie\Multitenancy\Models\Tenant;
+
+
 
 class AuthService
 {
@@ -25,7 +29,14 @@ class AuthService
         $otp = random_int(100000, 999999);
         $token = Str::random(64);
 
+        $currentTenant = Tenant::current();
+
+        if (!$currentTenant) {
+            throw new \Exception('No tenant found for the current request.');
+        }
+
         $user = User::create([
+            'company_id' => $currentTenant->getKey(),
             'name' => $data['name'],
             'username' => $data['username'],
             'email' => $data['email'],
@@ -40,8 +51,11 @@ class AuthService
             'otp_expires_at' => Carbon::now()->addMinutes(10),
         ]);
 
-        $user->assignRole('user');
+        $user->assignRole('Passenger');
         $user->notify(new SendOtpNotification($otp, $token, 'verify your account', '/verify-email'));
+
+        // Create a wallet for the new passenger
+        $user->wallet()->create(['balance' => 0]);
 
         return $user;
     }
@@ -113,7 +127,7 @@ class AuthService
             throw new \Exception('Verification code/link has expired.');
         }
 
-        if (($data['otp'] && $user->otp != $data['otp']) || ($data['token'] && $user->verification_token != $data['token'])) {
+        if ((isset($data['otp']) && $data['otp'] && $user->otp != $data['otp']) || (isset($data['token']) && $data['token'] && $user->verification_token != $data['token'])) {
             throw new \Exception('Invalid verification code or token.');
         }
 
@@ -242,21 +256,7 @@ class AuthService
      */
     public function updateProfile(User $user, array $data): User
     {
-        // Validation rule to check for unique email
-        validator($data, [
-            'name' => 'sometimes|required|string|max:255',
-            'email' => [
-                'sometimes',
-                'required',
-                'string',
-                'email',
-                'max:255',
-                Rule::unique('users')->ignore($user->id),
-            ],
-        ])->validate();
-
         $user->update($data);
-
         return $user;
     }
 }

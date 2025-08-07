@@ -31,11 +31,12 @@ abstract class BaseRequest extends FormRequest
     protected function failedValidation(Validator $validator)
     {
         // Get all validation error messages.
-        $errors = $validator->errors()->toArray();
+        $errorsBag = $validator->errors();
+        $errors = $errorsBag->toArray();
 
         // Create a custom error response using our helper function.
         // The response_error() function is from your helpers file.
-        $response = response_error('The given data was invalid.', $errors, 422);
+        $response = response_error($errorsBag->first(), $errors, 422);
 
         // Throw an exception with our custom response.
         // This stops the request from proceeding further.

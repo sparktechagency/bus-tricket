@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\UpdateProfileRequest;
 use App\Services\AuthService;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
+use App\Traits\FileUploadTrait;
 
 class ProfileController extends Controller
 {
+    use FileUploadTrait;
+
     protected AuthService $authService;
 
     public function __construct(AuthService $authService)
@@ -22,16 +25,25 @@ class ProfileController extends Controller
         return response_success('User data fetched successfully.', $user);
     }
 
-    public function updateProfile(Request $request)
+     public function updateProfile(UpdateProfileRequest $request)
     {
-        try {
-            $user = $this->authService->updateProfile(
-                $request->user(),
-                $request->only('name', 'email')
-            );
-            return response_success('Profile updated successfully.', $user);
-        } catch (ValidationException $e) {
-            return response_error('Validation failed.', $e->errors(), 422);
+        try{
+            $user = $request->user();
+        $validatedData = $request->validated();
+
+
+        if ($request->hasFile('avatar')) {
+            $avatarPath = $this->handleFileUpload($request, 'avatar', 'avatars');
+            $this->deleteFile($user->getRawOriginal('avatar'));
+
+            $validatedData['avatar'] = $avatarPath;
+        }
+
+        $updatedUser = $this->authService->updateProfile($user, $validatedData);
+
+        return response_success('Profile updated successfully.', $updatedUser);
+        } catch (\Exception $e) {
+            return response_error('Failed to update profile.', ['error' => $e->getMessage()], 500);
         }
     }
 }

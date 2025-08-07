@@ -3,38 +3,83 @@
 namespace App\TenantFinder;
 
 use Illuminate\Http\Request;
-use Spatie\Multitenancy\Contracts\Tenant;
+use App\Models\Company;
+use Spatie\Multitenancy\Contracts\IsTenant;
 use Spatie\Multitenancy\TenantFinder\TenantFinder;
 
-// NOTE: We are extending the base TenantFinder class from the package.
 class ChainedTenantFinder extends TenantFinder
 {
     /**
-     * An array of tenant finder classes to be used in sequence.
-     * The first finder that returns a tenant will be used.
+     * This method will be called to find the current tenant.
+     * It will try to find the tenant in a specific order:
+     * 1. By Subdomain (for web)
+     * 2. By Request Header (for API)
+     * 3. By Logged-in User (for authenticated requests)
      */
-    protected array $finders = [
-        // These are the built-in finders from the v4 package.
-        \Spatie\Multitenancy\TenantFinder\SubdomainTenantFinder::class,
-        \Spatie\Multitenancy\TenantFinder\RequestHeaderTenantFinder::class,
-        \Spatie\Multitenancy\TenantFinder\UserTenantFinder::class,
-    ];
-
-    /**
-     * This is the method that the package will call to find the tenant.
-     * The method name is `find` in v4.
-     */
-    public function find(Request $request): ?Tenant
+    public function findForRequest(Request $request): ?IsTenant
     {
-        foreach ($this->finders as $finderClass) {
-            /** @var TenantFinder $finder */
-            $finder = app($finderClass);
+        // 1. Try to find tenant by subdomain first
+        if ($tenant = $this->findBySubdomain($request)) {
+            return $tenant;
+        }
 
-            if ($tenant = $finder->find($request)) {
-                return $tenant;
-            }
+        // 2. If not found, try to find by request header
+        if ($tenant = $this->findByRequestHeader($request)) {
+            return $tenant;
+        }
+
+        // 3. If still not found, try to find by the authenticated user
+        if ($tenant = $this->findByUser($request)) {
+            return $tenant;
         }
 
         return null;
+    }
+
+    /**
+     * Tries to find a tenant based on the request's host.
+     */
+    protected function findBySubdomain(Request $request): ?IsTenant
+    {
+        $host = $request->getHost();
+
+        // This logic might need adjustment based on your domain structure.
+        $subdomain = explode('.', $host)[0];
+
+        return Company::where('subdomain', $subdomain)->first();
+    }
+
+    /**
+     * Tries to find a tenant based on a request header.
+     */
+    protected function findByRequestHeader(Request $request): ?IsTenant
+    {
+        $headerName = config('multitenancy.tenant_id_request_key');
+
+        if (! $headerName) {
+            return null;
+        }
+
+        $companyId = $request->header($headerName);
+
+        if (! $companyId) {
+            return null;
+        }
+
+        return Company::find($companyId);
+    }
+
+    /**
+     * Tries to find a tenant based on the currently authenticated user.
+     */
+    protected function findByUser(Request $request): ?IsTenant
+    {
+        $user = $request->user();
+
+        if (! $user || !isset($user->company_id)) {
+            return null;
+        }
+
+        return Company::find($user->company_id);
     }
 }

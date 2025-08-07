@@ -34,6 +34,9 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'otp',
+        'verification_token',
+        'otp_expires_at',
     ];
 
     /**
@@ -59,7 +62,8 @@ class User extends Authenticatable
                 if ($value) {
                     return Storage::disk('public')->url($value);
                 }
-                return 'https://ui-avatars.com/api/?name=' . urlencode($this->name);
+                return 'https://ui-avatars.com/api/?background=random&format=svg&name=' . urlencode($this->name);
+
             },
         );
     }
@@ -67,8 +71,8 @@ class User extends Authenticatable
     /**
      * A user has one wallet.
      */
-    // public function wallet()
-    // {
-    //     return $this->hasOne(\App\Models\PassengerWallet::class);
-    // }
+    public function wallet()
+    {
+        return $this->hasOne(\App\Models\PassengerWallet::class);
+    }
 }
