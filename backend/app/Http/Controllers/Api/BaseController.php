@@ -32,7 +32,7 @@ abstract class BaseController extends Controller
     /**
     * Displays a specific resource.
      */
-    public function show(int $id)
+    public function show(string $id)
     {
         return response()->json($this->service->getById($id));
     }
@@ -60,7 +60,7 @@ abstract class BaseController extends Controller
     /**
     * Deletes a resource.
      */
-    public function destroy(int $id)
+    public function destroy(string $id)
     {
         $this->service->delete($id);
         return response()->json(null, 204); // 204 No Content

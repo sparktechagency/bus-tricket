@@ -10,8 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
-// use Spatie\Multitenancy\Contracts\IsTenant;
-use Spatie\Multitenancy\Models\Tenant;
+
 
 
 
@@ -29,14 +28,15 @@ class AuthService
         $otp = random_int(100000, 999999);
         $token = Str::random(64);
 
-        $currentTenant = Tenant::current();
+        $currentTenantId = tenant('id');
 
-        if (!$currentTenant) {
+
+        if (!$currentTenantId) {
             throw new \Exception('No tenant found for the current request.');
         }
 
         $user = User::create([
-            'company_id' => $currentTenant->getKey(),
+            'company_id' => $currentTenantId,
             'name' => $data['name'],
             'username' => $data['username'],
             'email' => $data['email'],

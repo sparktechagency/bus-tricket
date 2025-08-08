@@ -34,7 +34,7 @@ abstract class BaseService
      */
     public function getById(int $id, array $with = [])
     {
-        return $this->model->with($with)->findOrFail($id);
+        return $this->model->with($with)->find($id);
     }
 
     /**
@@ -43,7 +43,12 @@ abstract class BaseService
     public function create(array $data, array $relations = [], ?Closure $additionalLogic = null)
     {
         // calling the trait's storeOrUpdate method
-        return $this->storeOrUpdate($data, new $this->model, $relations, $additionalLogic);
+        try{
+            return $this->storeOrUpdate($data, new $this->model, $relations, $additionalLogic);
+        } catch (\Exception $e) {
+            // Handle the exception as needed, e.g., log it or rethrow it
+            throw new \Exception('Error creating resource: ' . $e->getMessage());
+        }
     }
 
     /**
