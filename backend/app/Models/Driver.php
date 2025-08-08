@@ -1,0 +1,37 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Spatie\Multitenancy\Models\Concerns\UsesTenantConnection;
+
+
+class Driver extends Model
+{
+    use UsesTenantConnection, HasFactory;
+
+    protected $guarded = ['id'];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'license_expiry_date' => 'date',
+            'date_of_birth' => 'date',
+            'rating' => 'decimal:2',
+        ];
+    }
+
+    /**
+     * Get the user that owns the driver.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+}

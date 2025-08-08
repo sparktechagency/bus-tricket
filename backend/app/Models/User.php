@@ -75,4 +75,10 @@ class User extends Authenticatable
     {
         return $this->hasOne(\App\Models\PassengerWallet::class);
     }
+
+    //driver relationship
+    public function driver()
+    {
+        return $this->hasOne(Driver::class);
+    }
 }

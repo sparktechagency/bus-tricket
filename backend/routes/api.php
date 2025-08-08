@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Admin\DriverController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
@@ -34,6 +35,12 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::prefix('profile')->name('api.v1.profile.')->group(function () {
         Route::get('/me', [ProfileController::class, 'me'])->name('me');
         Route::post('/update', [ProfileController::class, 'updateProfile'])->name('update');
+    });
+
+    // --- Admin Panel Routes ---
+    Route::prefix('admin')->name('api.v1.admin.')->group(function () {
+        //driver management routes
+        Route::apiResource('drivers',DriverController::class)->except(['create', 'edit']);
     });
 
 });
