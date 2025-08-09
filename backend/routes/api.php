@@ -20,6 +20,10 @@ Route::prefix('v1/auth')->group(function () {
     Route::post('/forgot-password', [PasswordController::class, 'forgotPassword'])->name('api.v1.auth.forgotPassword');
     Route::post('/verify-password-otp', [PasswordController::class, 'verifyResetOtp'])->name('api.v1.auth.verifyResetOtp');
     Route::post('/reset-password-with-token', [PasswordController::class, 'resetPasswordWithToken'])->name('api.v1.auth.resetPasswordWithToken');
+
+    //driver login
+    Route::post('/driver/login', [\App\Http\Controllers\Api\V1\Driver\AuthController::class, 'login'])->name('api.v1.driver.auth.login');
+    Route::post('/driver/logout', [\App\Http\Controllers\Api\V1\Driver\AuthController::class, 'logout'])->name('api.v1.driver.auth.logout');
 });
 
 // --- Protected Routes (User must be logged in) ---
