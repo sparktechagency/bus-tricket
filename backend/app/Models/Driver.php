@@ -26,6 +26,10 @@ class Driver extends Model
             'rating' => 'decimal:2',
         ];
     }
+    //hidden attributes
+    protected $hidden = [
+        'pin_code', // Sensitive information, should not be exposed
+    ];
 
     /**
      * Get the user that owns the driver.
