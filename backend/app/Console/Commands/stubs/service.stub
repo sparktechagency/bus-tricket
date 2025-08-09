@@ -2,12 +2,21 @@
 
 namespace App\Services;
 
+use App\Services\BaseService;
 use App\Models\{{modelName}};
 
 class {{className}} extends BaseService
 {
+    /**
+     * The model class name.
+     *
+     * @var string
+     */
+    protected string $modelClass = {{modelName}}::class;
+
     public function __construct()
     {
-        parent::__construct(new {{modelName}}());
+        // Ensure BaseService initializes the model instance
+        parent::__construct();
     }
 }

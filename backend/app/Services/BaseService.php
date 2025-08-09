@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use App\Traits\ManagesData;
@@ -6,63 +7,119 @@ use Illuminate\Database\Eloquent\Model;
 use Closure;
 
 /**
- * This is a base class for all services.
- * It uses the ManagesData trait to handle database operations.
+ * Class BaseService
+ *
+ * An abstract base service layer for handling common CRUD operations.
+ * Services extending this class must set the `$modelClass` property to the fully-qualified
+ * class name of the Eloquent model they will manage.
+ *
+ * This class uses the `ManagesData` trait to centralize create/update logic.
+ *
+ * @package App\Services
  */
 abstract class BaseService
 {
-
     use ManagesData;
 
+    /**
+     * The fully qualified class name of the model.
+     *
+     * Example:
+     *   protected string $modelClass = \App\Models\User::class;
+     *
+     * @var string
+     */
+    protected string $modelClass;
+
+    /**
+     * The model instance for performing queries.
+     *
+     * @var \Illuminate\Database\Eloquent\Model
+     */
     protected Model $model;
 
-    public function __construct(Model $model)
-    {
-        $this->model = $model;
-    }
-
     /**
-     * Retrieves all resources with pagination.
+     * BaseService constructor.
+     *
+     * Resolves the model class from the Laravel service container.
      */
-    public function getAll(array $with = [], int $perPage = 15)
+    public function __construct()
     {
-        return $this->model->with($with)->latest()->paginate($perPage);
+        $this->model = app($this->modelClass);
     }
 
     /**
-     * Retrieves a single resource by its ID.
+     * Retrieve all records with optional relationships, pagination, and dynamic ordering.
+     *
+     * @param array $with       Relationships to eager load.
+     * @param int   $perPage    Number of records per page.
+     * @param string $orderBy   Column name to order by (default primary key).
+     * @param string $direction Order direction: 'asc' or 'desc' (default 'desc').
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function getAll(
+        array $with = [],
+        int $perPage = 15,
+        ?string $orderBy = null,
+        string $direction = 'desc'
+    ) {
+        // Fallback to primary key if no orderBy specified
+        $orderBy = $orderBy ?: $this->model->getKeyName();
+
+        return $this->model
+            ->with($with)
+            ->orderBy($orderBy, $direction)
+            ->paginate($perPage);
+    }
+
+    /**
+     * Retrieve a single record by its primary key.
+     *
+     * @param int   $id    The primary key value.
+     * @param array $with  Relationships to eager load.
+     * @return \Illuminate\Database\Eloquent\Model
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
      */
     public function getById(int $id, array $with = [])
     {
-        return $this->model->with($with)->find($id);
+        return $this->model->with($with)->findOrFail($id);
     }
 
     /**
-     * Creates a new resource in the database.
+     * Create a new record in the database.
+     *
+     * @param array        $data                  Data to be saved.
+     * @param array        $relations             Related models to sync or attach.
+     * @param Closure|null $transactionalCallback Optional transactional logic after save.
+     * @return \Illuminate\Database\Eloquent\Model
      */
-    public function create(array $data, array $relations = [], ?Closure $additionalLogic = null)
+    public function create(array $data, array $relations = [], ?Closure $transactionalCallback = null)
     {
-        // calling the trait's storeOrUpdate method
-        try{
-            return $this->storeOrUpdate($data, new $this->model, $relations, $additionalLogic);
-        } catch (\Exception $e) {
-            // Handle the exception as needed, e.g., log it or rethrow it
-            throw new \Exception('Error creating resource: ' . $e->getMessage());
-        }
+        return $this->storeOrUpdate($data, new $this->modelClass, $relations, $transactionalCallback);
     }
 
     /**
-     * Updates an existing resource in the database.
+     * Update an existing record in the database.
+     *
+     * @param int          $id                    Primary key of the record to update.
+     * @param array        $data                  Data to be updated.
+     * @param array        $relations             Related models to sync or attach.
+     * @param Closure|null $transactionalCallback Optional transactional logic after update.
+     * @return \Illuminate\Database\Eloquent\Model
      */
-    public function update(int $id, array $data, array $relations = [], ?Closure $additionalLogic = null)
+    public function update(int $id, array $data, array $relations = [], ?Closure $transactionalCallback = null)
     {
+        // dd($id, $data, $relations, $transactionalCallback);
         $record = $this->getById($id);
-        // calling the trait's storeOrUpdate method
-        return $this->storeOrUpdate($data, $record, $relations, $additionalLogic);
+        return $this->storeOrUpdate($data, $record, $relations, $transactionalCallback);
     }
 
     /**
-     * Deletes a resource by its ID.
+     * Delete a record by its primary key.
+     *
+     * @param int $id Primary key of the record to delete.
+     * @return bool
      */
     public function delete(int $id): bool
     {

@@ -67,7 +67,7 @@ class AuthService
      * @param string $name The user's full name.
      * @return string A unique username.
      */
-    private function generateUniqueUsername(string $name): string
+    public function generateUniqueUsername(string $name): string
     {
         // Create a base username from the name (e.g., "Test User" -> "testuser")
         $username = Str::slug($name, '');

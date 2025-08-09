@@ -28,18 +28,16 @@ abstract class BaseRequest extends FormRequest
      *
      * @throws \Illuminate\Http\Exceptions\HttpResponseException
      */
-    protected function failedValidation(Validator $validator)
-    {
-        // Get all validation error messages.
-        $errorsBag = $validator->errors();
-        $errors = $errorsBag->toArray();
+    protected function failedValidation(Validator $validator): void
+{
+    $errorsBag = $validator->errors();
 
-        // Create a custom error response using our helper function.
-        // The response_error() function is from your helpers file.
-        $response = response_error($errorsBag->first(), $errors, 422);
-
-        // Throw an exception with our custom response.
-        // This stops the request from proceeding further.
-        throw new HttpResponseException($response);
-    }
+    throw new HttpResponseException(
+        response_error(
+            $errorsBag->first(),
+            $errorsBag->toArray(),
+            422
+        )
+    );
+}
 }
