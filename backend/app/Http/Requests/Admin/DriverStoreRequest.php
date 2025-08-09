@@ -19,7 +19,7 @@ class DriverStoreRequest extends BaseRequest
 
         return [
             'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:100', 'unique:users,username'],
+            'username' => ['nullable', 'string', 'max:100', 'unique:users,username'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             // 'password' => ['required', 'string', 'min:6', 'confirmed'],
             'phone_number' => ['nullable', 'string', 'max:20'],

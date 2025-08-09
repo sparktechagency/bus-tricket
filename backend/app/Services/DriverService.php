@@ -4,61 +4,128 @@ namespace App\Services;
 
 use App\Models\Driver;
 use App\Models\User;
-use App\Services\BaseService;
 use App\Traits\FileUploadTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use App\Services\AuthService;
 
 class DriverService extends BaseService
 {
     use FileUploadTrait;
 
-    public function __construct()
+    protected AuthService $authService;
+    protected UserService $userService;
+
+    public function __construct(UserService $userService, AuthService $authService)
     {
-        parent::__construct(new Driver());
+        $this->userService = $userService;
+        $this->authService = $authService;
+
+        // Initialize BaseService internals (sets $this->model based on $modelClass)
+        parent::__construct();
     }
 
+    /**
+     * Define the Eloquent model class managed by this service.
+     *
+     * @var string
+     */
+    protected string $modelClass = Driver::class;
 
+
+    //create a new Driver which includes creating a User record first.
+    public function createDriver(array $data): User
+    {
+        try{
+            // Check if username was provided. If not, generate one.
+            if (empty($data['username'])) {
+                $data['username'] = $this->authService->generateUniqueUsername($data['name']);
+            }
+
+            // dd($data);
+
+            $userData = [
+            'company_id' => tenant('id'),
+            'name' => $data['name'],
+            'username' => $data['username'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['pin_code']), // by default, using pin_code as password
+            'phone_number' => $data['phone_number'] ?? null,
+        ];
+
+        //file upload
+        if (isset($data['avatar'])) {
+                $userData['avatar'] = $this->handleFileUpload(request(), 'avatar', 'avatars');
+            }
+        $transactionalCallback = function ($user) use ($data) {
+            $user->assignRole('Driver');
+
+            $driverData = [
+                'company_id' => tenant('id'),
+                'staff_number' => $data['staff_number'],
+                'pin_code' => Hash::make($data['pin_code']),
+                'license_number' => $data['license_number'],
+                'license_expiry_date' => $data['license_expiry_date'],
+            ];
+            $user->driver()->create($driverData);
+        };
+
+        $user = $this->userService->create($userData, [], $transactionalCallback);
+        $user->load('driver');
+        return $user;
+
+        }catch(\Exception $e) {
+            throw new \Exception('Failed to create driver: ' . $e->getMessage());
+        }
+    }
 
     /**
      * Updates an existing Driver and their associated User record.
+     * This method perfectly utilizes the transactionalCallback from your ManagesData trait.
      */
-    // public function updateDriver(int $driverId, array $data): Driver
-    // {
-    //     $driver = $this->getById($driverId);
-    //     $user = $driver->user;
+    public function updateDriver(int $driverId, array $validatedData): Driver
+    {
+          // Prepare data for the main model (Driver)
+        $driverFields = ['staff_number', 'license_number', 'license_expiry_date'];
+        $driverUpdates = array_intersect_key($validatedData, array_flip($driverFields));
 
-    //     DB::transaction(function () use ($driver, $user, $data) {
-    //         // Update User table
-    //         if (isset($data['name'])) $user->name = $data['name'];
-    //         if (isset($data['email'])) $user->email = $data['email'];
-    //         $user->save();
+        if (!empty($validatedData['pin_code'])) {
+            $driverUpdates['pin_code'] = Hash::make($validatedData['pin_code']);
+        }
 
-    //         // Update Driver table
-    //         if (isset($data['staff_number'])) $driver->staff_number = $data['staff_number'];
-    //         if (isset($data['license_number'])) $driver->license_number = $data['license_number'];
+        //Prepare data for the related model (User)
+        $userFields = ['name', 'username', 'email', 'phone_number'];
+        $userUpdates = array_intersect_key($validatedData, array_flip($userFields));
 
-    //         if (isset($data['profile_picture'])) {
-    //             $this->deleteFile($driver->avatar);
-    //             $driver->avatar = $this->handleFileUpload(request(), 'avatar', 'drivers');
-    //         }
+        if (!empty($validatedData['password'])) {
+            $userUpdates['password'] = Hash::make($validatedData['password']);
+        }
 
-    //         $driver->save();
-    //     });
+        //Define the transactional callback to update the related User
+        $transactionalCallback = function ($driver) use ($userUpdates, $validatedData) {
+            $user = $driver->user;
+            $oldAvatar = $user->getRawOriginal('avatar');
 
-    //     return $driver->load('user');
-    // }
+            // Handle avatar upload
+            if (isset($validatedData['avatar'])) {
+                $path = $this->handleFileUpload(request(), 'avatar', 'avatars');
+                if ($path) {
+                    $userUpdates['avatar'] = $path;
+                }
+            }
 
-    // /**
-    //  * Deletes a Driver and their associated User record.
-    //  */
-    // public function deleteDriver(int $driverId): bool
-    // {
-    //     $driver = $this->getById($driverId);
+            if (!empty($userUpdates)) {
+                $user->update($userUpdates);
 
-    //     return DB::transaction(function () use ($driver) {
-    //         $this->deleteFile($driver->profile_picture_path);
-    //         return $driver->delete();
-    //     });
-    // }
+                // Delete old avatar if a new one was uploaded
+                if (array_key_exists('avatar', $userUpdates) && $oldAvatar) {
+                    $this->deleteFile($oldAvatar);
+                }
+            }
+        };
+
+        $driver = $this->update($driverId, $driverUpdates, [], $transactionalCallback);
+        return $driver->load('user');
+    }
+
 }
