@@ -4,12 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Multitenancy\Models\Concerns\UsesTenantConnection;
+use App\Models\Concerns\BelongsToCompany;
 
 
 class Driver extends Model
 {
-    use UsesTenantConnection, HasFactory;
+    use HasFactory, BelongsToCompany;
 
     protected $guarded = ['id'];
 

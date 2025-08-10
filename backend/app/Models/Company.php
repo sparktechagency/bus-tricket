@@ -2,29 +2,40 @@
 
 namespace App\Models;
 
-use Spatie\Multitenancy\Models\Tenant;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Spatie\Permission\Traits\HasRoles;
 
-class Company extends Tenant
+class Company extends Model
 {
-    use HasRoles;
+    use HasFactory, HasRoles;
+
+    // Ensure Spatie Permission resolves guard as 'web' for this model
+    protected $guard_name = 'web';
 
     protected $guarded = ['id'];
 
-
-    //tenant key name methods
-     public function getTenantKeyName(): string
+    /**
+     * The attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
     {
-        return 'id';
+        return [
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+        ];
     }
 
-    /**
-     * Get the tenant key for the model.
-     *
-     * @return mixed
-     */
-    public function getTenantKey()
+    // Relationships
+    public function user()
     {
-        return $this->id;
+        return $this->hasOne(User::class);
+    }
+
+    public function users()
+    {
+        return $this->hasMany(User::class);
     }
 }

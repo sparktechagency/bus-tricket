@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('companies', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
+            $table->string('company_name')->unique();
             $table->string('contact_email')->unique();
-            $table->string('phone_number')->nullable();
-            $table->string('address')->nullable();
-            $table->string('logo')->nullable(); // Path to company logo
+            // $table->string('phone_number')->nullable();
+            // $table->string('address')->nullable();
+            // $table->string('logo')->nullable(); // Path to company logo
             $table->string('subdomain')->nullable();
             $table->enum('status', ['active','pending','suspended'])->default('pending');
             $table->timestamps();
