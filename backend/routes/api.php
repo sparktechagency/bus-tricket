@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Admin\CompanyController;
 use App\Http\Controllers\Api\V1\Admin\DriverController;
+use App\Http\Controllers\Api\V1\Admin\RouteController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
@@ -49,6 +50,9 @@ Route::middleware('auth:sanctum', 'identify.company')->prefix('v1')->group(funct
         Route::apiResource('drivers',DriverController::class)->except(['create', 'edit']);
         //company management routes
         Route::apiResource('companies',CompanyController::class)->except(['create', 'edit'])->withoutMiddleware('identify.company');
+        //route management routes
+        Route::apiResource('routes',RouteController::class)->except(['create', 'edit']);
+        //fare management routes
     });
 
 });

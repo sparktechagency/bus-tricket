@@ -53,13 +53,21 @@ trait ManagesData
     private function handleRelations(Model $model, array $relations)
     {
         foreach ($relations as $relationName => $relationData) {
-            // Check if the relation method exists in the model
             if (method_exists($model, $relationName)) {
-                // sync() is very effective for belongsToMany relationships
-                $model->$relationName()->sync($relationData);
+                $relation = $model->$relationName();
+
+                // Check the type of relationship to handle it accordingly
+                if ($relation instanceof \Illuminate\Database\Eloquent\Relations\HasMany) {
+                    // For One-to-Many, we delete old records and create new ones.
+                    $relation->delete();
+                    $relation->createMany($relationData);
+                }
+                elseif ($relation instanceof \Illuminate\Database\Eloquent\Relations\BelongsToMany) {
+                    // For Many-to-Many, we use sync.
+                    $relation->sync($relationData);
+                }
             }
         }
     }
-
 }
 
