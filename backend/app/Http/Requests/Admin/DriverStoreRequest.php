@@ -27,7 +27,7 @@ class DriverStoreRequest extends BaseRequest
             'staff_number' => ['required', 'string', 'max:50', Rule::unique('drivers')->where('company_id', $companyId)],
             'pin_code' => ['required', 'string', 'min:3', 'max:5'],
             // Apply the same fix for license_number as it can also be the same across companies
-            'license_number' => ['required', 'string', 'max:100', Rule::unique('drivers')->where('company_id', $companyId)],
+            'license_number' => ['required', 'string', 'max:100', 'unique:drivers,license_number'],
             'license_expiry_date' => ['required', 'date'],
             'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ];

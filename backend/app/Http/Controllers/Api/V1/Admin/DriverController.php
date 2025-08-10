@@ -90,6 +90,7 @@ class DriverController extends BaseController
         try{
             $driver = $this->driverService->getById($id, ['user:id,avatar']);
             $user = $driver->user;
+            
           //remove avatar if exists
         if (!$driver) {
             return response_error('Driver not found.', [], 404);

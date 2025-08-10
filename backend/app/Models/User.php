@@ -11,13 +11,22 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
-use Spatie\Multitenancy\Models\Concerns\UsesTenantConnection;
+
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     // Use the correct trait here
-    use HasFactory, Notifiable, HasRoles, UsesTenantConnection, HasApiTokens;
+    use HasFactory, Notifiable, HasRoles, HasApiTokens;
+
+
+    protected string $guard_name = 'web';
+
+    // Force Spatie Permission to always use the 'web' guard for this model
+    protected function getDefaultGuardName(): string
+    {
+        return 'web';
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -56,14 +65,13 @@ class User extends Authenticatable
     //avatar url
     protected function avatar(): Attribute
     {
-        return Attribute    ::make(
+        return Attribute::make(
             get: function (?string $value) {
 
                 if ($value) {
                     return Storage::disk('public')->url($value);
                 }
                 return 'https://ui-avatars.com/api/?background=random&format=svg&name=' . urlencode($this->name);
-
             },
         );
     }
@@ -80,5 +88,11 @@ class User extends Authenticatable
     public function driver()
     {
         return $this->hasOne(Driver::class);
+    }
+
+    //company relationship
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 }

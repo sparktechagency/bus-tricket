@@ -79,6 +79,15 @@ class RolesAndPermissionsSeeder extends Seeder
                 'view support tickets',
                 'reply support tickets',
             ],
+            'System Access Control' => [
+                'access admin dashboard',
+                'access driver console',
+                'access trip & route management',
+                'access passenger database',
+                'access fare control',
+                'access notification system',
+                'access analytics',
+            ],
         ];
 
         // Create Permissions
@@ -102,10 +111,10 @@ class RolesAndPermissionsSeeder extends Seeder
         // CompanyAdmin Role -> Can do everything except manage companies.
         // Only company-related permissions are excluded from Permission::all().
         $companyAdminPermissions = Permission::where('name', '!=', 'create companies')
-                                             ->where('name', '!=', 'view companies')
-                                             ->where('name', '!=', 'edit companies')
-                                             ->where('name', '!=', 'delete companies')
-                                             ->get();
+            ->where('name', '!=', 'view companies')
+            ->where('name', '!=', 'edit companies')
+            ->where('name', '!=', 'delete companies')
+            ->get();
         $companyAdminRole = Role::findOrCreate('CompanyAdmin', 'web');
         $companyAdminRole->syncPermissions($companyAdminPermissions);
 
@@ -131,11 +140,9 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // First, create a default company for the SuperAdmin.
         $defaultCompany = \App\Models\Company::firstOrCreate(
-            ['name' => 'Rolleston Express'],
+            ['company_name' => 'Rolleston Express'],
             [
                 'contact_email' => 'contact@rolleston.com',
-                'phone_number' => '1234567890',
-                'address' => 'Main Office, Dhaka',
                 'subdomain' => 'rolleston',
                 'status' => 'Active',
             ]
@@ -147,6 +154,8 @@ class RolesAndPermissionsSeeder extends Seeder
                 'company_id' => $defaultCompany->id,
                 'name' => 'Super Admin',
                 'username' => 'superadmin',
+                'address' => 'Main Office, Dhaka',
+                'phone_number' => '1234567890',
                 'email_verified_at' => now(),
                 'password' => \Illuminate\Support\Facades\Hash::make('password'), // Change this later.
                 'rider_type' => 'Adult',
