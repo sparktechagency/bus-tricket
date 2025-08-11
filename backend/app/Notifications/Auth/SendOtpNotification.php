@@ -6,11 +6,12 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use App\Jobs\Concerns\IsTenantAware;
 
 
 class SendOtpNotification extends Notification implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, IsTenantAware;
 
     protected string $otp;
     protected string $token;

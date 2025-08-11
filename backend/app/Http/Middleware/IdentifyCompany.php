@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Middleware;
 
 use App\Models\Company;
@@ -34,7 +35,7 @@ class IdentifyCompany
 
         // Set the company in the application context
         if ($company) {
-            app()->instance('currentCompany', $company);
+            app()->instance('current_tenant', $company);
         }
 
         return $next($request);

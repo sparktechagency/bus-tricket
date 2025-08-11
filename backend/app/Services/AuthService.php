@@ -52,8 +52,7 @@ class AuthService
         ]);
 
         $user->assignRole('Passenger');
-        $user->notify(new SendOtpNotification($otp, $token, 'verify your account', '/verify-email'));
-
+        $user->notify((new SendOtpNotification($otp, $token, 'verify your account', '/verify-email'))->onTenant());
         // Create a wallet for the new passenger
         $user->wallet()->create(['balance' => 0]);
 
@@ -187,10 +186,11 @@ class AuthService
             throw new \Exception('Email already verified.');
         }
 
+
         $otp = random_int(100000, 999999);
         $token = Str::random(64);
         $user->update(['otp' => $otp, 'verification_token' => $token, 'otp_expires_at' => Carbon::now()->addMinutes(10)]);
-        $user->notify(new SendOtpNotification($otp, $token, 'verify your account', '/verify-email'));
+        $user->notify((new SendOtpNotification($otp, $token, 'verify your account', '/verify-email'))->onTenant());
     }
 
     /**

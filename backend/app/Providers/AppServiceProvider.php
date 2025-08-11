@@ -12,7 +12,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Register a scoped instance for the current tenant
+        $this->app->scoped('current_tenant', function () {
+            return null;
+        });
     }
 
     /**
