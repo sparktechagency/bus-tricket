@@ -9,24 +9,24 @@ use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\PasswordController;
 use App\Http\Controllers\Api\V1\Auth\ProfileController;
 use App\Http\Controllers\Api\V1\Auth\VerificationController;
-
+use App\Http\Controllers\Api\V1\Passenger\PaymentController;
 
 // --- Public Routes (Authentication) ---
 Route::middleware('identify.company')->prefix('v1')->group(function () {
     Route::prefix('auth')->group(function () {
-    Route::post('/register', [AuthController::class, 'register'])->name('api.v1.auth.register');
-    Route::post('/login', [AuthController::class, 'login'])->name('api.v1.auth.login');
+        Route::post('/register', [AuthController::class, 'register'])->name('api.v1.auth.register');
+        Route::post('/login', [AuthController::class, 'login'])->name('api.v1.auth.login');
 
-    Route::post('/verify', [VerificationController::class, 'verify'])->name('api.v1.auth.verify');
-    Route::post('/resend-verification', [VerificationController::class, 'resendVerification'])->name('api.v1.auth.resendVerification');
+        Route::post('/verify', [VerificationController::class, 'verify'])->name('api.v1.auth.verify');
+        Route::post('/resend-verification', [VerificationController::class, 'resendVerification'])->name('api.v1.auth.resendVerification');
 
-    Route::post('/forgot-password', [PasswordController::class, 'forgotPassword'])->name('api.v1.auth.forgotPassword');
-    Route::post('/verify-password-otp', [PasswordController::class, 'verifyResetOtp'])->name('api.v1.auth.verifyResetOtp');
-    Route::post('/reset-password-with-token', [PasswordController::class, 'resetPasswordWithToken'])->name('api.v1.auth.resetPasswordWithToken');
+        Route::post('/forgot-password', [PasswordController::class, 'forgotPassword'])->name('api.v1.auth.forgotPassword');
+        Route::post('/verify-password-otp', [PasswordController::class, 'verifyResetOtp'])->name('api.v1.auth.verifyResetOtp');
+        Route::post('/reset-password-with-token', [PasswordController::class, 'resetPasswordWithToken'])->name('api.v1.auth.resetPasswordWithToken');
 
-    //driver login
-    Route::post('/driver/login', [\App\Http\Controllers\Api\V1\Driver\AuthController::class, 'login'])->name('api.v1.driver.auth.login');
-});
+        //driver login
+        Route::post('/driver/login', [\App\Http\Controllers\Api\V1\Driver\AuthController::class, 'login'])->name('api.v1.driver.auth.login');
+    });
 });
 
 // --- Protected Routes (User must be logged in) ---
@@ -47,12 +47,18 @@ Route::middleware('auth:sanctum', 'identify.company')->prefix('v1')->group(funct
     // --- Admin Panel Routes ---
     Route::prefix('admin')->name('api.v1.admin.')->group(function () {
         //driver management routes
-        Route::apiResource('drivers',DriverController::class)->except(['create', 'edit']);
+        Route::apiResource('drivers', DriverController::class)->except(['create', 'edit']);
         //company management routes
-        Route::apiResource('companies',CompanyController::class)->except(['create', 'edit'])->withoutMiddleware('identify.company');
+        Route::apiResource('companies', CompanyController::class)->except(['create', 'edit'])->withoutMiddleware('identify.company');
         //route management routes
-        Route::apiResource('routes',RouteController::class)->except(['create', 'edit']);
+        Route::apiResource('routes', RouteController::class)->except(['create', 'edit']);
         //fare management routes
     });
 
+    //--- Passenger Mobile App Routes ---
+    Route::prefix('passenger')->name('api.v1.passenger.')->group(function () {
+        Route::post('/payment/create-card-setup-session', [PaymentController::class, 'createCardSetupSession']);
+        Route::post('/payment/top-up', [PaymentController::class, 'topUpWithSavedCard']);
+        Route::post('/payment/refund', [PaymentController::class, 'requestRefund']);
+    });
 });
