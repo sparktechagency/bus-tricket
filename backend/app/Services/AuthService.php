@@ -215,7 +215,7 @@ class AuthService
             'created_at' => Carbon::now()
         ]);
 
-        $user->notify(new SendOtpNotification($otp, $token, 'reset your password', '/reset-password'));
+        $user->notify((new SendOtpNotification($otp, $token, 'reset your password', '/reset-password'))->onTenant());
 
         return $token;
     }
