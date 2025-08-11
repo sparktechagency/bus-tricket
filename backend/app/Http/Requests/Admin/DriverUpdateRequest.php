@@ -52,6 +52,7 @@ class DriverUpdateRequest extends BaseRequest
                     ->where(fn ($q) => $q->where('company_id', $companyId))
                     ->ignore($driverId)
             ],
+            'experience_years' => ['sometimes', 'integer', 'min:0'],
             'license_expiry_date' => ['sometimes', 'date'],
             'avatar' => ['sometimes', 'nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ];

@@ -17,6 +17,8 @@ class RouteStoreRequest extends BaseRequest
             'time_points' => ['required', 'array'],
             'time_points.*.location_name' => ['required', 'string'],
             'time_points.*.departure_time' => ['required', 'date_format:H:i'],
+            'time_points.*.latitude' => ['required', 'numeric', 'between:-90,90'],
+            'time_points.*.longitude' => ['required', 'numeric', 'between:-180,180'],
 
             'fares' => ['required', 'array'],
             'fares.*.passenger_type' => ['required', 'string'],

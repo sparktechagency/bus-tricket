@@ -19,6 +19,8 @@ class RouteStopResource extends JsonResource
             'route_id' => $this->route_id,
             'location_name' => $this->location_name,
             'departure_time' => $this->departure_time,
+            'latitude' => $this->latitude,
+            'longitude' => $this->longitude,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

@@ -26,6 +26,8 @@ return new class extends Migration
             $table->foreignId('route_id')->constrained('routes')->onDelete('cascade');
             $table->string('location_name');
             $table->time('departure_time');
+            $table->decimal('latitude', 10, 8);
+            $table->decimal('longitude', 11, 8);
             $table->timestamps();
         });
 
@@ -44,6 +46,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        //for foreign key constraints
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('routes');
         Schema::dropIfExists('route_stops');
         Schema::dropIfExists('fares');

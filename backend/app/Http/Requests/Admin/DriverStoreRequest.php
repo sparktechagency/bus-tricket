@@ -29,6 +29,7 @@ class DriverStoreRequest extends BaseRequest
             // Apply the same fix for license_number as it can also be the same across companies
             'license_number' => ['required', 'string', 'max:100', 'unique:drivers,license_number'],
             'license_expiry_date' => ['required', 'date'],
+            'experience_years' => ['required', 'integer', 'min:0'],
             'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ];
     }

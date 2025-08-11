@@ -66,6 +66,7 @@ class DriverService extends BaseService
                 'pin_code' => Hash::make($data['pin_code']),
                 'license_number' => $data['license_number'],
                 'license_expiry_date' => $data['license_expiry_date'],
+                'experience_years' => $data['experience_years'],
             ];
             $user->driver()->create($driverData);
         };
@@ -86,7 +87,7 @@ class DriverService extends BaseService
     public function updateDriver(int $driverId, array $validatedData): Driver
     {
           // Prepare data for the main model (Driver)
-        $driverFields = ['staff_number', 'license_number', 'license_expiry_date'];
+        $driverFields = ['staff_number', 'license_number', 'license_expiry_date','experience_years'];
         $driverUpdates = array_intersect_key($validatedData, array_flip($driverFields));
 
         if (!empty($validatedData['pin_code'])) {
