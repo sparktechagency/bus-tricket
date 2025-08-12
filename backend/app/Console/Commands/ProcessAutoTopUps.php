@@ -26,15 +26,15 @@ class ProcessAutoTopUps extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+     public function handle()
     {
         $this->info('Starting to process auto top-ups...');
         Stripe::setApiKey(config('services.stripe.secret'));
 
-        // Find all wallets with auto top-up enabled and balance below the threshold
+        // **THE FIX:** Find wallets where the balance is less than their specific threshold.
         $walletsToTopUp = PassengerWallet::where('auto_topup_enabled', true)
-                                        ->where('balance', '<', 3.50)
-                                        ->with(['user', 'user.paymentMethods']) // Eager load relationships
+                                        ->whereColumn('balance', '<', 'auto_topup_threshold')
+                                        ->with(['user', 'user.paymentMethods'])
                                         ->get();
 
         if ($walletsToTopUp->isEmpty()) {
@@ -47,26 +47,36 @@ class ProcessAutoTopUps extends Command
         foreach ($walletsToTopUp as $wallet) {
             $user = $wallet->user;
             $defaultPaymentMethod = $user->paymentMethods->where('is_default', true)->first();
+            $topUpAmount = $wallet->auto_topup_amount; // Use the dynamic amount from the wallet
 
-            if ($user->stripe_customer_id && $defaultPaymentMethod) {
+            if ($user->stripe_customer_id && $defaultPaymentMethod && $topUpAmount > 0) {
                 try {
-                    // Use PaymentIntent to charge the user off-session
-                    PaymentIntent::create([
+                    // Create a pending transaction record first.
+                    $transaction = $user->transactions()->create([
+                        'company_id' => $user->company_id, // Ensure company_id is set
+                        'type' => 'AutoTopUp',
+                        'amount' => $topUpAmount,
+                        'status' => 'pending',
+                    ]);
+
+                    // Create the PaymentIntent. The database will be updated by the webhook.
+                    $paymentIntent = PaymentIntent::create([
                         'customer' => $user->stripe_customer_id,
                         'payment_method' => $defaultPaymentMethod->stripe_payment_method_id,
-                        'amount' => 3500, // $35.00 in cents
+                        'amount' => $topUpAmount * 100, // Amount in cents
                         'currency' => 'usd',
-                        'off_session' => true, // This is a background charge
+                        'off_session' => true,
                         'confirm' => true,
+                        'return_url' => config('app.url'),
+                        'metadata' => [
+                            'transaction_id' => $transaction->id, // Pass our transaction ID
+                        ],
                     ]);
 
-                    $wallet->increment('balance', 35.00);
-                    $user->transactions()->create([
-                        'type' => 'AutoTopUp',
-                        'amount' => 35.00,
-                    ]);
+                    // Update our transaction with the Stripe Payment Intent ID
+                    $transaction->update(['stripe_payment_intent_id' => $paymentIntent->id]);
 
-                    $this->info('Successfully topped up wallet for user ID: ' . $user->id);
+                    $this->info('PaymentIntent created for user ID: ' . $user->id . '. Waiting for webhook confirmation.');
 
                 } catch (\Exception $e) {
                     $this->error('Auto top-up failed for user ID: ' . $user->id . '. Reason: ' . $e->getMessage());
