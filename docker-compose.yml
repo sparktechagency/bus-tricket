@@ -119,21 +119,21 @@ services:
       bus-ticket-db:
         condition: service_healthy
 
-  # scheduler:
-  #   image: my-bus-ticket-app
-  #   container_name: bus-ticket-scheduler
-  #   command: sh -c "while true; do php /var/www/artisan schedule:run; sleep 60; done"
-  #   restart: unless-stopped
-  #   volumes:
-  #     - ./backend:/var/www
-  #     - /var/www/vendor
-  #   networks:
-  #     - bus-ticket-network
-  #   depends_on:
-  #     bus-ticket-app:
-  #       condition: service_started
-  #     bus-ticket-db:
-  #       condition: service_healthy
+  scheduler:
+    image: my-bus-ticket-app
+    container_name: bus-ticket-scheduler
+    command: sh -c "while true; do php /var/www/artisan schedule:run; sleep 60; done"
+    restart: unless-stopped
+    volumes:
+      - ./backend:/var/www
+      - /var/www/vendor
+    networks:
+      - bus-ticket-network
+    depends_on:
+      bus-ticket-app:
+        condition: service_started
+      bus-ticket-db:
+        condition: service_healthy
       
 
   phpmyadmin:

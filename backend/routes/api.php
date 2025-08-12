@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\Auth\PasswordController;
 use App\Http\Controllers\Api\V1\Auth\ProfileController;
 use App\Http\Controllers\Api\V1\Auth\VerificationController;
 use App\Http\Controllers\Api\V1\Passenger\PaymentController;
+use App\Http\Controllers\Api\V1\WebhookController;
 
 // --- Public Routes (Authentication) ---
 Route::middleware('identify.company')->prefix('v1')->group(function () {
@@ -57,8 +58,16 @@ Route::middleware('auth:sanctum', 'identify.company')->prefix('v1')->group(funct
 
     //--- Passenger Mobile App Routes ---
     Route::prefix('passenger')->name('api.v1.passenger.')->group(function () {
+        // Transaction history
+        Route::get('/payment/transactions', [PaymentController::class, 'getTransactionHistory'])->name('transactions.history');
         Route::post('/payment/create-card-setup-session', [PaymentController::class, 'createCardSetupSession']);
-        Route::post('/payment/top-up', [PaymentController::class, 'topUpWithSavedCard']);
+        // Route::post('/payment/top-up', [PaymentController::class, 'topUpWithSavedCard']);
+        // Route::post('/payment/top-up', [PaymentController::class, 'createPaymentIntent']);
+        Route::post('/payment/top-up', [PaymentController::class, 'createPaymentSession']);
         Route::post('/payment/refund', [PaymentController::class, 'requestRefund']);
     });
 });
+
+// --- Webhook Routes ---
+Route::post('/v1/stripe/webhook', [WebhookController::class, 'handleStripeWebhook']);
+

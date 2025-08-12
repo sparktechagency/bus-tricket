@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Console\Scheduling\Schedule;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -15,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'identify.company' => \App\Http\Middleware\IdentifyCompany::class,
         ]);
+    })
+    ->withSchedule(function (Schedule $schedule) {
+        $schedule->command('autotopup:process')->everyTenMinutes();
     })
     ->withExceptions(function (Exceptions $exceptions) {
        //

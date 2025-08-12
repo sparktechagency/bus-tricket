@@ -17,7 +17,9 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
             $table->string('type'); // e.g., 'TopUp', 'TripFare', 'Refund'
             $table->decimal('amount', 8, 2);
+            $table->string('stripe_payment_intent_id')->nullable()->index();
             $table->string('stripe_charge_id')->nullable()->index();
+            $table->string('status')->default('pending');
             $table->timestamps();
         });
     }

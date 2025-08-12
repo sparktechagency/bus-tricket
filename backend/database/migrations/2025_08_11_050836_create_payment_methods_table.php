@@ -17,8 +17,12 @@ return new class extends Migration
             $table->string('stripe_payment_method_id');
             $table->string('card_brand');
             $table->string('last_four');
+            $table->string('fingerprint')->nullable();
             $table->boolean('is_default')->default(false);
             $table->timestamps();
+
+            // Ensure a user cannot add the same card twice.
+            $table->unique(['user_id', 'fingerprint']);
         });
     }
 
