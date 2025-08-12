@@ -80,7 +80,7 @@ class PaymentService
     }
 
     /**
-     * Option 2: Creates a Payment Intent that can handle both immediate payment
+     * Creates a Payment Intent that can handle both immediate payment
      * and saving the card for future use if requested.
      */
     // public function createPaymentIntent(User $user, float $amount, bool $saveCard = false): PaymentIntent
@@ -155,10 +155,6 @@ class PaymentService
         }
 
         $session = CheckoutSession::create($checkoutSessionParams);
-        // dd($session);
-        // $transaction->update(['stripe_payment_intent_id' => $session->payment_intent]);
-        // dd($transaction);
-
         return $session;
     }
 
@@ -166,19 +162,25 @@ class PaymentService
 
 
 
-    public function refundCharge(User $user, string $stripeChargeId): void
+    public function requestRefund(User $user, string $stripeChargeId): void
     {
         try {
-            $refund = Refund::create(['charge' => $stripeChargeId]);
-            $refundAmount = $refund->amount / 100;
+            $originalTransaction = $user->transactions()
+                ->where('stripe_charge_id', $stripeChargeId)
+                ->where('type', 'TopUp')
+                ->firstOrFail();
 
-            $user->wallet->decrement('balance', $refundAmount);
+            // Create a pending refund transaction record
             $user->transactions()->create([
                 'company_id' => $user->company_id,
                 'type' => 'Refund',
-                'amount' => -$refundAmount,
+                'amount' => -$originalTransaction->amount, // Store refunds as negative
+                'status' => 'pending',
                 'stripe_charge_id' => $stripeChargeId,
             ]);
+
+            // Initiate the refund with Stripe
+            Refund::create(['charge' => $stripeChargeId]);
         } catch (\Exception $e) {
             throw new \Exception('Refund failed: ' . $e->getMessage());
         }

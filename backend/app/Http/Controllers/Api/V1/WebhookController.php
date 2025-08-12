@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Notifications\PaymentSuccessNotification;
+use App\Notifications\RefundSuccessNotification;
 use App\Services\PaymentService;
 
 use Illuminate\Http\Request;
@@ -14,6 +15,7 @@ use Stripe\Webhook;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\StripeClient;
 use Stripe\PaymentIntent;
+use Stripe\Refund;
 
 class WebhookController extends Controller
 {
@@ -70,6 +72,12 @@ class WebhookController extends Controller
             case 'payment_intent.payment_failed':
                 $paymentIntent = $event->data->object;
                 $this->handleFailedPayment($paymentIntent);
+                break;
+            case 'charge.refund.updated':
+                $refund = $event->data->object; // This is a Refund object
+                if ($refund->status === 'succeeded') {
+                    $this->handleSuccessfulRefund($refund);
+                }
                 break;
 
             default:
@@ -149,11 +157,14 @@ class WebhookController extends Controller
 
         if ($transaction && $transaction->status === 'pending') {
             $user = $transaction->user;
-
+            // Retrieve the full Payment Intent to get the charge ID
+            $paymentIntent = $this->stripe->paymentIntents->retrieve($session->payment_intent);
+            Log::info($paymentIntent);
             // Update transaction status and save the Payment Intent ID
             $transaction->update([
                 'status' => 'succeeded',
                 'stripe_payment_intent_id' => $session->payment_intent,
+                'stripe_charge_id' => $paymentIntent->latest_charge, // Assuming the charge ID is the same as the Payment Intent ID
             ]);
 
             // Update user's wallet balance
@@ -174,6 +185,8 @@ class WebhookController extends Controller
             $user->notify(new PaymentSuccessNotification($paymentIntent));
         }
     }
+
+
 
     protected function handleSuccessfulPayment(PaymentIntent $paymentIntent)
     {
@@ -207,6 +220,30 @@ class WebhookController extends Controller
 
         if ($transaction && $transaction->status === 'pending') {
             $transaction->update(['status' => 'failed']);
+        }
+    }
+
+    //refund
+     protected function handleSuccessfulRefund(\Stripe\Refund $refund)
+    {
+        // Find our internal pending refund transaction using the charge ID from the refund object
+        $transaction = Transaction::where('stripe_charge_id', $refund->charge)
+                                  ->where('status', 'pending')
+                                  ->where('type', 'Refund')
+                                  ->first();
+
+        if ($transaction) {
+            $user = $transaction->user;
+
+            // Update transaction status to 'succeeded'
+            $transaction->update(['status' => 'succeeded']);
+
+            // Update user's wallet balance
+            $user->wallet->decrement('balance', abs($transaction->amount));
+
+            // Notify the user about the successful refund
+            Log::info($refund);
+            $user->notify(new RefundSuccessNotification($refund));
         }
     }
 }

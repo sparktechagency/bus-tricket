@@ -121,8 +121,8 @@ class PaymentController extends Controller
         if ($validator->fails()) {
             return response_error($validator->errors()->first(), $validator->errors()->toArray());
         }
-        $this->paymentService->refundCharge($request->user(), $request->charge_id);
-        return response_success('Refund processed successfully.');
+        $this->paymentService->requestRefund($request->user(), $request->charge_id);
+        return response_success('Refund request initiated. It will be processed shortly.');
         } catch (\Exception $e) {
             return response_error($e->getMessage());
         }
