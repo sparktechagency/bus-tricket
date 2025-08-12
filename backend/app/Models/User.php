@@ -7,6 +7,9 @@ namespace App\Models;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
@@ -80,20 +83,30 @@ class User extends Authenticatable
     /**
      * A user has one wallet.
      */
-    public function wallet()
+    public function wallet() : HasOne
     {
         return $this->hasOne(\App\Models\PassengerWallet::class);
     }
 
     //driver relationship
-    public function driver()
+    public function driver() : HasOne
     {
         return $this->hasOne(Driver::class);
     }
 
     //company relationship
-    public function company()
+    public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+    
+     public function paymentMethods(): HasMany
+    {
+        return $this->hasMany(PaymentMethod::class);
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
     }
 }

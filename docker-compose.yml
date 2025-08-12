@@ -63,21 +63,21 @@ services:
       retries: 5
     
 
-  # 4. Landing Page Service (Nginx for React)
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   container_name: bus-ticket_frontend
-  #   restart: unless-stopped
-  #   ports:
-  #     - "3000:3000"
-  #   environment:
-  #     - PORT=3000
-  #   networks:
-  #     - bus-ticket-network
+      # 4. Landing Page Service (Nginx for React)
+      # frontend:
+      #   build:
+      #     context: ./frontend
+      #     dockerfile: Dockerfile
+      #   container_name: bus-ticket_frontend
+      #   restart: unless-stopped
+      #   ports:
+      #     - "3000:3000"
+      #   environment:
+      #     - PORT=3000
+      #   networks:
+      #     - bus-ticket-network
 
- 
+      
   # 6. Main Nginx Reverse Proxy Service
   nginx-proxy:
     build:
@@ -93,7 +93,7 @@ services:
       - bus-ticket-network
     depends_on:
       - backend-webserver # Now depends on the Laravel Nginx server
-      # - frontend
+  # - frontend
 
 
   queue-worker:
@@ -104,7 +104,7 @@ services:
     volumes:
       - ./backend:/var/www
       - /var/www/vendor
-    environment: # <-- Worker-er jonno environment variable
+    environment: # 
       - DB_CONNECTION=mysql
       - DB_HOST=bus-ticket-db
       - DB_PORT=3306
@@ -119,21 +119,28 @@ services:
       bus-ticket-db:
         condition: service_healthy
 
-  # scheduler:
-  #   image: my-bus-ticket-app
-  #   container_name: bus-ticket-scheduler
-  #   command: sh -c "while true; do php /var/www/artisan schedule:run; sleep 60; done"
-  #   restart: unless-stopped
-  #   volumes:
-  #     - ./backend:/var/www
-  #     - /var/www/vendor
-  #   networks:
-  #     - bus-ticket-network
-  #   depends_on:
-  #     bus-ticket-app:
-  #       condition: service_started
-  #     bus-ticket-db:
-  #       condition: service_healthy
+  scheduler:
+    image: my-bus-ticket-app
+    container_name: bus-ticket-scheduler
+    command: sh -c "while true; do php /var/www/artisan schedule:run; sleep 60; done"
+    restart: unless-stopped
+    volumes:
+      - ./backend:/var/www
+      - /var/www/vendor
+    environment: # 
+      - DB_CONNECTION=mysql
+      - DB_HOST=bus-ticket-db
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+    networks:
+      - bus-ticket-network
+    depends_on:
+      bus-ticket-app:
+        condition: service_started
+      bus-ticket-db:
+        condition: service_healthy
       
 
   phpmyadmin:
@@ -144,25 +151,25 @@ services:
     environment:
       PMA_HOST: bus-ticket-db
       PMA_PORT: 3306 
-    #   PMA_USER: mytsv_root
-    #   PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      #   PMA_USER: mytsv_root
+      #   PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       PMA_ARBITRARY: 0
     networks:
       - bus-ticket-network
 
-  # 5. NEW: Socket Server Service
-  # socket-server:
-  #   build:
-  #     context: ./socket-server
-  #     dockerfile: Dockerfile
-  #   container_name: bus-ticket-socket-server
-  #   restart: unless-stopped
-  #   environment:
-  #     - PORT=3001
-  #   networks:
-  #     - bus-ticket-network
-  #   depends_on:
-  #     - bus-ticket-app
+# 5. NEW: Socket Server Service
+# socket-server:
+#   build:
+#     context: ./socket-server
+#     dockerfile: Dockerfile
+#   container_name: bus-ticket-socket-server
+#   restart: unless-stopped
+#   environment:
+#     - PORT=3001
+#   networks:
+#     - bus-ticket-network
+#   depends_on:
+#     - bus-ticket-app
 
 # Define the custom network
 networks:
