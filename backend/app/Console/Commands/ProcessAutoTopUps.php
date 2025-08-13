@@ -31,7 +31,7 @@ class ProcessAutoTopUps extends Command
         $this->info('Starting to process auto top-ups...');
         Stripe::setApiKey(config('services.stripe.secret'));
 
-        // **THE FIX:** Find wallets where the balance is less than their specific threshold.
+        // Find wallets where the balance is less than their specific threshold.
         $walletsToTopUp = PassengerWallet::where('auto_topup_enabled', true)
                                         ->whereColumn('balance', '<', 'auto_topup_threshold')
                                         ->with(['user', 'user.paymentMethods'])

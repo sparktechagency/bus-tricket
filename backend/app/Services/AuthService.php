@@ -34,6 +34,8 @@ class AuthService
         if (!$currentTenantId) {
             throw new \Exception('No tenant found for the current request.');
         }
+        // Generate a unique QR code number
+        $data['qr_code_number'] = $this->generateUniqueQrNumber();
 
         $user = User::create([
             'company_id' => $currentTenantId,
@@ -45,6 +47,7 @@ class AuthService
             'phone_number' => $data['phone_number'] ?? null,
             'avatar' => $data['avatar'] ?? null,
             'address' => $data['address'] ?? null,
+            'qr_code_number' => $data['qr_code_number'],
             'status' => 'active',
             'otp' => $otp,
             'verification_token' => $token,
@@ -57,6 +60,18 @@ class AuthService
         $user->wallet()->create(['balance' => 0]);
 
         return $user;
+    }
+
+    /**
+     * Helper to generate a random 6-digit number that doesn't already exist.
+     */
+     private function generateUniqueQrNumber(): string
+    {
+        do {
+            $number = random_int(100000, 999999);
+        } while (User::where('qr_code_number', $number)->exists());
+
+        return (string)$number;
     }
 
     /**

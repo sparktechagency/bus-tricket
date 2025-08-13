@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\Auth\PasswordController;
 use App\Http\Controllers\Api\V1\Auth\ProfileController;
 use App\Http\Controllers\Api\V1\Auth\VerificationController;
 use App\Http\Controllers\Api\V1\Passenger\PaymentController;
+use App\Http\Controllers\Api\V1\Passenger\RoutesController;
 use App\Http\Controllers\Api\V1\WebhookController;
 
 // --- Public Routes (Authentication) ---
@@ -65,6 +66,10 @@ Route::middleware('auth:sanctum', 'identify.company')->prefix('v1')->group(funct
         // Route::post('/payment/top-up', [PaymentController::class, 'createPaymentIntent']);
         Route::post('/payment/top-up', [PaymentController::class, 'createPaymentSession']);
         Route::post('/payment/refund', [PaymentController::class, 'requestRefund']);
+
+        // Routes for passengers
+        Route::get('/routes', [RoutesController::class, 'index'])->name('routes.index');
+        Route::get('/routes/{id}', [RoutesController::class, 'show'])->name('routes.show');
     });
 });
 

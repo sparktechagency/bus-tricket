@@ -18,7 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withSchedule(function (Schedule $schedule) {
-        $schedule->command('autotopup:process')->everyMinute();
+        $schedule->command('autotopup:process')->everyTenMinutes();
     })
     ->withExceptions(function (Exceptions $exceptions) {
        //
