@@ -10,15 +10,16 @@ class RouteStoreRequest extends BaseRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'trip' => ['nullable', 'string', 'max:10'],
+            'route_prefix' => ['nullable', 'string', 'max:10'],
             'google_map_link' => ['nullable', 'url'],
             'status' => ['required', 'boolean'],
 
-            'time_points' => ['required', 'array'],
-            'time_points.*.location_name' => ['required', 'string'],
-            'time_points.*.departure_time' => ['required', 'date_format:H:i'],
-            'time_points.*.latitude' => ['required', 'numeric', 'between:-90,90'],
-            'time_points.*.longitude' => ['required', 'numeric', 'between:-180,180'],
+            'stops' => ['required', 'array', 'min:2'],
+            'stops.*.location_name' => ['required', 'string', 'max:255'],
+            'stops.*.stop_order' => ['required', 'integer'],
+            'stops.*.minutes_from_start' => ['required', 'integer', 'min:0'],
+            'stops.*.latitude' => ['required', 'numeric', 'between:-90,90'],
+            'stops.*.longitude' => ['required', 'numeric', 'between:-180,180'],
 
             'fares' => ['required', 'array'],
             'fares.*.passenger_type' => ['required', 'string'],
