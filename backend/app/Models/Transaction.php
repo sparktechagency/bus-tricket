@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\BelongsToCompany;
 
 class Transaction extends Model
 {
+    use BelongsToCompany;
     protected $guarded = ['id'];
 
     /**

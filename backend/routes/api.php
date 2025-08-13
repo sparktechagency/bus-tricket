@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\Admin\CompanyController;
 use App\Http\Controllers\Api\V1\Admin\DriverController;
 use App\Http\Controllers\Api\V1\Admin\RouteController;
+use App\Http\Controllers\Api\V1\Admin\TripController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
@@ -55,6 +56,10 @@ Route::middleware('auth:sanctum', 'identify.company')->prefix('v1')->group(funct
         //route management routes
         Route::apiResource('routes', RouteController::class)->except(['create', 'edit']);
         //fare management routes
+
+        // trip management routes
+        Route::apiResource('trips',TripController::class)->except(['create', 'edit']);
+
     });
 
     //--- Passenger Mobile App Routes ---

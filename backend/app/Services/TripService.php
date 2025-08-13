@@ -20,10 +20,5 @@ class TripService extends BaseService
         parent::__construct();
     }
 
-    //create a new trip
-    public function createTrip(array $data): Trip
-    {
-        $trip = $this->create($data);
-        return $trip;
-    }
+    
 }
