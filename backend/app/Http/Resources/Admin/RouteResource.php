@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Resources;
+namespace App\Http\Resources\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -18,15 +18,17 @@ class RouteResource extends JsonResource
             'id' => $this->id,
             'company_id' => $this->company_id,
             'name' => $this->name,
-            'trip' => $this->trip,
+            'route_prefix' => $this->route_prefix,
             'google_map_link' => $this->google_map_link,
             'status' => $this->status,
-            //calculate duration based on stops first and last departure times
-            'duration' => $this->stops->isNotEmpty() ? \Carbon\Carbon::parse($this->stops->first()->departure_time)->diffInMinutes(\Carbon\Carbon::parse($this->stops->last()->departure_time)) : null,
+            'duration' => $this->whenLoaded('stops', function () {
+                return $this->stops->last()?->minutes_from_start;
+            }),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 
             // nested relations
+            'trips' => TripSummaryResource::collection($this->whenLoaded('trips')),
             'stops' => RouteStopResource::collection($this->whenLoaded('stops')),
             'fares' => FareResource::collection($this->whenLoaded('fares')),
         ];

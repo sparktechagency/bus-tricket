@@ -16,6 +16,7 @@ class TripStoreRequest extends BaseRequest
         return [
             'route_id' => ['required', 'integer', 'exists:routes,id'],
             'departure_time' => ['required', 'date_format:H:i'],
+            'direction' => ['required', 'string', 'in:outbound,inbound'],
             'is_active' => ['required', 'boolean'],
         ];
     }

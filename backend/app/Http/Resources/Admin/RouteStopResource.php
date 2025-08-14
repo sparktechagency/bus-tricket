@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Resources;
+namespace App\Http\Resources\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class FareResource extends JsonResource
+class RouteStopResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -17,9 +17,11 @@ class FareResource extends JsonResource
         return [
             'id' => $this->id,
             'route_id' => $this->route_id,
-            'passenger_type' => $this->passenger_type,
-            'payment_method' => $this->payment_method,
-            'amount' => $this->amount,
+            'location_name' => $this->location_name,
+            'stop_order' => $this->stop_order,
+            'minutes from start' => $this->minutes_from_start,
+            'latitude' => $this->latitude,
+            'longitude' => $this->longitude,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

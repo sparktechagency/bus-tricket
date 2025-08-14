@@ -20,4 +20,9 @@ class Route extends Model
     {
         return $this->hasMany(Fare::class);
     }
+
+    public function trips(): HasMany
+    {
+        return $this->hasMany(Trip::class);
+    }
 }

@@ -15,15 +15,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
             $table->string('name');
-            $table->enum('direction', ['outbound', 'inbound']);
             $table->string('route_prefix')->nullable();
             $table->text('google_map_link')->nullable();
             $table->boolean('status')->default(true);
             $table->timestamps();
-
-            // To easily find pairs of routes (e.g., A->B and B->A),
-            // we can add a unique constraint on name and direction per company.
-            $table->unique(['company_id', 'name', 'direction']);
         });
 
         Schema::create('route_stops', function (Blueprint $table) {
@@ -51,6 +46,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
             $table->foreignId('route_id')->constrained('routes')->onDelete('cascade');
             $table->time('departure_time');
+             $table->enum('direction', ['outbound', 'inbound']);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

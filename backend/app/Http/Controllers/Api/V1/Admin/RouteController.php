@@ -4,7 +4,8 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\RouteStoreRequest;
-use App\Http\Resources\RouteResource;
+use App\Http\Resources\Admin\RouteIndexResource;
+use App\Http\Resources\Admin\RouteResource;
 use App\Models\Route;
 use App\Services\RouteService;
 use Illuminate\Http\Request;
@@ -28,12 +29,12 @@ class RouteController extends Controller
      */
     public function index()
     {
-        $routes = $this->routeService->getAll(['stops', 'fares']);
+        $routes = $this->routeService->getAll(['stops', 'fares', 'trips']);
         if ($routes->isEmpty()) {
             return response_error('No routes found.', [], 404);
         }
 
-        return RouteResource::collection($routes)
+        return RouteIndexResource::collection($routes)
             ->additional([
                 'ok' => true,
                 'message' => 'Routes retrieved successfully.'
@@ -90,7 +91,7 @@ class RouteController extends Controller
             // Delete the route
             $route->delete();
 
-            return response_success('Route deleted successfully.', null, 204);
+            return response_success('Route deleted successfully.');
         } catch (\Exception $e) {
             return response_error('Failed to delete route.', ['error' => $e->getMessage()], 500);
         }

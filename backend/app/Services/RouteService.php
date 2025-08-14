@@ -21,19 +21,19 @@ class RouteService extends BaseService
 
     }
 
-    
+
 
     public function createRoute(array $data): Route
     {
         //Separate main route data from relational data
         $relations = [
-            'stops' => $data['time_points'],
+            'stops' => $data['stops'],
             'fares' => $this->prepareFaresData($data['fares']),
         ];
 
         $routeData = [
             'name' => $data['name'],
-            'trip' => $data['trip'],
+            'route_prefix' => $data['route_prefix'],
             'google_map_link' => $data['google_map_link'],
             'status' => $data['status'],
         ];
@@ -48,13 +48,13 @@ class RouteService extends BaseService
     {
         //Separate main route data from relational data
         $relations = [
-            'stops' => $data['time_points'],
+            'stops' => $data['stops'],
             'fares' => $this->prepareFaresData($data['fares']),
         ];
 
         $routeData = [
             'name' => $data['name'],
-            'trip' => $data['trip'],
+            'route_prefix' => $data['route_prefix'],
             'google_map_link' => $data['google_map_link'],
             'status' => $data['status'],
         ];
