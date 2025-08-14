@@ -21,7 +21,7 @@ class RouteResource extends JsonResource
             'name' => $this->name,
             'inbound' => count($this->stops),
             'outbound' => count($this->stops),
-            'trip' => $this->trip,
+            'route_prefix' => $this->route_prefix,
             'status' => $this->status,
             'first_trip' => $this->stops->isNotEmpty()
                 ? Carbon::parse($this->stops->first()->departure_time)->format('h : i a')

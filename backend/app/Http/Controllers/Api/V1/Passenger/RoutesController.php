@@ -3,44 +3,51 @@
 namespace App\Http\Controllers\Api\V1\Passenger;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Passenger\RouteDetailResource;
 use App\Http\Resources\Passenger\RouteResource;
+use App\Http\Resources\Passenger\RouteSummaryResource;
 use App\Models\Route;
+use App\Services\Passenger\RouteListService;
+use App\Services\Passenger\RouteScheduleService;
 use Illuminate\Http\Request;
 
 class RoutesController extends Controller
 {
-    public function __construct()
+    protected RouteListService $listService;
+    protected RouteScheduleService $scheduleService;
+    public function __construct(RouteListService $listService, RouteScheduleService $scheduleService)
     {
-        // Middleware can be applied here if needed
-
-
+        $this->listService = $listService;
+        $this->scheduleService = $scheduleService;
+        // Middleware for authorization
+        $this->middleware('can:view routes')->only(['index', 'show']);
     }
     //available Routes for passengers
     public function index(Request $request)
     {
         // Fetch routes based on the company_id from the request
-        try{
+        try {
 
-        $routes = Route::with('stops')->where('status', true)->get();
-        if( $routes->isEmpty()) {
-            return response()->json(['message' => 'No active routes found'], 404);
-        }
+            $routes = $this->listService->getRoutesWithSummary();
+            return RouteSummaryResource::collection($routes);
+            if ($routes->isEmpty()) {
+                return response()->json(['message' => 'No active routes found'], 404);
+            }
 
-        return RouteResource::collection($routes);
+            return RouteResource::collection($routes);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error fetching routes: ' . $e->getMessage()], 500);
         }
-
     }
 
     //show route details
-    public function show($id)
+    public function show($routeId)
     {
-        // Fetch a specific route by ID
-        $route = Route::with(['fares', 'stops'])->find($id);
-        if (!$route) {
-            return response()->json(['message' => 'Route not found'], 404);
+       try{
+        $route = Route::with(['stops', 'trips', 'fares'])->findOrFail($routeId);
+         return new RouteDetailResource($route);
+       }catch (\Exception $e) {
+            return response()->json(['message' => 'Error fetching route details: ' . $e->getMessage()], 500);
         }
-        return $route;
     }
 }
