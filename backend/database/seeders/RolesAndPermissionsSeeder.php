@@ -131,6 +131,9 @@ class RolesAndPermissionsSeeder extends Seeder
         // Passenger Role -> No special backend permissions.
         // All their actions will be handled via dedicated API routes (e.g., /api/me/profile).
         $passengerRole = Role::findOrCreate('Passenger', 'web');
+        $passengerRole->givePermissionTo([
+            'view routes',
+        ]);
 
 
         // -----------------------------------------------------------------

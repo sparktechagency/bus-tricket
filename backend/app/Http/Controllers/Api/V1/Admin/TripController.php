@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\TripStoreRequest;
-use App\Services\TripScheduleService;
+use App\Services\Admin\TripScheduleService;
 use App\Services\TripService;
 use Illuminate\Http\Request;
 
