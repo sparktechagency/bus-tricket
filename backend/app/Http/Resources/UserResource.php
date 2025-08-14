@@ -31,9 +31,15 @@ class UserResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 
-            'roles' => RoleResource::collection($this->whenLoaded('roles')),
+            $this->mergeWhen($this->relationLoaded('wallet'), [
+                'balance' => $this->wallet ? number_format($this->wallet->balance, 2) : '0.00',
+            ]),
 
-            // Conditionally include permissions only if 'roles' relationship is loaded
+            $this->mergeWhen($this->relationLoaded('paymentMethods'), [
+                'card_number' => $this->paymentMethods->where('is_default', true)->first()->last_four ?? null,
+            ]),
+
+            'roles' => RoleResource::collection($this->whenLoaded('roles')),
             $this->mergeWhen($this->relationLoaded('roles'), [
                 'permissions' => $this->getAllPermissions()->pluck('name'),
             ]),

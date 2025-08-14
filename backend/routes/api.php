@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Admin\CompanyController;
 use App\Http\Controllers\Api\V1\Admin\DriverController;
+use App\Http\Controllers\Api\V1\Admin\PassengerController;
 use App\Http\Controllers\Api\V1\Admin\RouteController;
 use App\Http\Controllers\Api\V1\Admin\TripController;
 use Illuminate\Http\Request;
@@ -51,6 +52,14 @@ Route::middleware('auth:sanctum', 'identify.company')->prefix('v1')->group(funct
     Route::prefix('admin')->name('api.v1.admin.')->group(function () {
         //driver management routes
         Route::apiResource('drivers', DriverController::class)->except(['create', 'edit']);
+
+
+        //->passenger management routes
+        Route::apiResource('passengers',PassengerController::class)->except(['create', 'edit']);
+        //passenger wallet top-up
+        Route::post('passengers/{id}/top-up', [PassengerController::class, 'topUpWallet'])->name('passengers.topUp');
+
+
         //company management routes
         Route::apiResource('companies', CompanyController::class)->except(['create', 'edit'])->withoutMiddleware('identify.company');
         //route management routes
@@ -61,6 +70,7 @@ Route::middleware('auth:sanctum', 'identify.company')->prefix('v1')->group(funct
         Route::apiResource('trips',TripController::class)->except(['create', 'edit']);
 
     });
+
 
     //--- Passenger Mobile App Routes ---
     Route::prefix('passenger')->name('api.v1.passenger.')->group(function () {

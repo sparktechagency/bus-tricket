@@ -49,26 +49,34 @@ abstract class BaseService
     }
 
     /**
-     * Retrieve all records with optional relationships, pagination, and dynamic ordering.
+     * Retrieve all records with optional relationships, pagination, dynamic ordering, and custom queries.
      *
-     * @param array $with       Relationships to eager load.
-     * @param int   $perPage    Number of records per page.
-     * @param string $orderBy   Column name to order by (default primary key).
-     * @param string $direction Order direction: 'asc' or 'desc' (default 'desc').
+     * @param array         $with            Relationships to eager load.
+     * @param int           $perPage         Number of records per page.
+     * @param Closure|null  $queryCallback   A closure to apply custom query constraints (e.g., where clauses).
+     * @param string|null   $orderBy         Column name to order by.
+     * @param string        $direction       Order direction: 'asc' or 'desc'.
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     public function getAll(
         array $with = [],
         int $perPage = 15,
+        ?Closure $queryCallback = null,
         ?string $orderBy = null,
         string $direction = 'desc'
     ) {
-        // Fallback to primary key if no orderBy specified
-        $orderBy = $orderBy ?: $this->model->getKeyName();
+        $query = $this->model->with($with);
 
-        return $this->model
-            ->with($with)
-            ->orderBy($orderBy, $direction)
+        // Apply custom query constraints if provided
+        if ($queryCallback) {
+            $queryCallback($query);
+        }
+
+        // Fallback to primary key if no orderBy specified
+        $orderByColumn = $orderBy ?: $this->model->getKeyName();
+
+        return $query
+            ->orderBy($orderByColumn, $direction)
             ->paginate($perPage);
     }
 
