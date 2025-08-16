@@ -122,7 +122,7 @@ class PaymentService
         $amountInCents = round($amount * 100);
 
         $transaction = $user->transactions()->create([
-            'company_id' => $user->company_id,
+            // 'company_id' => $user->company_id,
             'type' => 'TopUp',
             'amount' => $amount,
             'status' => 'pending',
@@ -172,7 +172,7 @@ class PaymentService
 
             // Create a pending refund transaction record
             $user->transactions()->create([
-                'company_id' => $user->company_id,
+                // 'company_id' => $user->company_id,
                 'type' => 'Refund',
                 'amount' => -$originalTransaction->amount, // Store refunds as negative
                 'status' => 'pending',

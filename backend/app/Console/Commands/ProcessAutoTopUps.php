@@ -53,7 +53,7 @@ class ProcessAutoTopUps extends Command
                 try {
                     // Create a pending transaction record first.
                     $transaction = $user->transactions()->create([
-                        'company_id' => $user->company_id, // Ensure company_id is set
+                        // 'company_id' => $user->company_id, // Ensure company_id is set
                         'type' => 'AutoTopUp',
                         'amount' => $topUpAmount,
                         'status' => 'pending',

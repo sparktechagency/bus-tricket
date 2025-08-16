@@ -45,7 +45,9 @@ class PassengerController extends Controller
 
             $passengers = $this->passengerService->getAll(['paymentMethods', 'wallet'], $perPage, $queryCallback);
 
-            //create wallet for each passenger if not exists
+            if ($passengers->isEmpty()) {
+                return response_error('No passengers found.', [], 404);
+            }
 
             return UserResource::collection($passengers);
         } catch (\Exception $e) {
@@ -114,12 +116,8 @@ class PassengerController extends Controller
     {
         try {
             $passenger = $this->passengerService->getById($id, ['wallet', 'paymentMethods']);
-            if (!$passenger) {
+            if (!$passenger || !$passenger->hasRole('Passenger')) {
                 return response_error('Passenger not found.', [], 404);
-            }
-            //check role passenger
-            if (!$passenger->hasRole('Passenger')) {
-                return response_error('This user is not a passenger.', [], 400);
             }
 
             //if exists avatar, delete it
