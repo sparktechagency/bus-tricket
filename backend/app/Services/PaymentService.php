@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use Exception;
 use Stripe\Stripe;
 use Stripe\Customer;
 use Stripe\PaymentMethod;
@@ -12,13 +13,25 @@ use Stripe\PaymentIntent;
 
 class PaymentService
 {
-    public function __construct()
+    /**
+     * Helper function to set the Stripe key for a specific user's company.
+     */
+    private function setStripeKeyForUser(User $user): void
     {
-        Stripe::setApiKey(config('services.stripe.secret'));
+        $company = $user->company;
+
+        if (!$company || !$company->stripe_secret_key) {
+            throw new Exception('Stripe payment is not configured for this company.');
+        }
+
+        Stripe::setApiKey($company->stripe_secret_key);
     }
+
 
     public function getOrCreateStripeCustomer(User $user): Customer
     {
+        $this->setStripeKeyForUser($user);
+
         if ($user->stripe_customer_id) {
             return Customer::retrieve($user->stripe_customer_id);
         }
@@ -29,6 +42,7 @@ class PaymentService
 
     public function createCardSetupCheckoutSession(User $user): CheckoutSession
     {
+        $this->setStripeKeyForUser($user);
         $customer = $this->getOrCreateStripeCustomer($user);
         return CheckoutSession::create([
             'customer' => $customer->id,
@@ -44,6 +58,7 @@ class PaymentService
      */
     public function chargeSavedCard(User $user, float $amount): PaymentIntent
     {
+        $this->setStripeKeyForUser($user);
         $customer = $this->getOrCreateStripeCustomer($user);
         $defaultPaymentMethod = $user->paymentMethods()->where('is_default', true)->first();
 
@@ -114,6 +129,7 @@ class PaymentService
 
     public function createPaymentCheckoutSession(User $user, float $amount, bool $saveCard = false, $defaultPaymentMethod = false): CheckoutSession | PaymentIntent
     {
+        $this->setStripeKeyForUser($user);
         if ($defaultPaymentMethod) {
             $paymentIntent = $this->chargeSavedCard($user, $amount);
             return $paymentIntent;
@@ -122,7 +138,7 @@ class PaymentService
         $amountInCents = round($amount * 100);
 
         $transaction = $user->transactions()->create([
-            // 'company_id' => $user->company_id,
+            'company_id' => $user->company_id,
             'type' => 'TopUp',
             'amount' => $amount,
             'status' => 'pending',
@@ -164,7 +180,9 @@ class PaymentService
 
     public function requestRefund(User $user, string $stripeChargeId): void
     {
+
         try {
+            $this->setStripeKeyForUser($user);
             $originalTransaction = $user->transactions()
                 ->where('stripe_charge_id', $stripeChargeId)
                 ->where('type', 'TopUp')
@@ -172,7 +190,7 @@ class PaymentService
 
             // Create a pending refund transaction record
             $user->transactions()->create([
-                // 'company_id' => $user->company_id,
+                'company_id' => $user->company_id,
                 'type' => 'Refund',
                 'amount' => -$originalTransaction->amount, // Store refunds as negative
                 'status' => 'pending',
@@ -214,6 +232,7 @@ class PaymentService
      */
     public function savePaymentMethod(User $user, string $stripePaymentMethodId): void
     {
+        $this->setStripeKeyForUser($user);
         $stripePaymentMethod = PaymentMethod::retrieve($stripePaymentMethodId);
         $fingerprint = $stripePaymentMethod->card->fingerprint;
 

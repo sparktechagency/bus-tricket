@@ -88,6 +88,9 @@ class RolesAndPermissionsSeeder extends Seeder
                 'access notification system',
                 'access analytics',
             ],
+            'Settings Management' => [
+                'manage settings',
+            ],
         ];
 
         // Create Permissions

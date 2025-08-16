@@ -25,6 +25,8 @@ class Company extends Model
         return [
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
+            'stripe_secret_key' => 'encrypted', // Automatically encrypts and decrypts
+            'stripe_webhook_secret' => 'encrypted', // Automatically encrypts and decrypts
         ];
     }
 
