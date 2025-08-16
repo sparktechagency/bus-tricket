@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\Admin\CompanyController;
 use App\Http\Controllers\Api\V1\Admin\DriverController;
 use App\Http\Controllers\Api\V1\Admin\PassengerController;
 use App\Http\Controllers\Api\V1\Admin\RouteController;
+use App\Http\Controllers\Api\V1\Admin\SettingsController;
 use App\Http\Controllers\Api\V1\Admin\TripController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -55,7 +56,7 @@ Route::middleware('auth:sanctum', 'identify.company')->prefix('v1')->group(funct
 
 
         //->passenger management routes
-        Route::apiResource('passengers',PassengerController::class)->except(['create', 'edit']);
+        Route::apiResource('passengers', PassengerController::class)->except(['create', 'edit']);
         //passenger wallet top-up
         Route::post('passengers/{id}/top-up', [PassengerController::class, 'topUpWallet'])->name('passengers.topUp');
 
@@ -67,8 +68,12 @@ Route::middleware('auth:sanctum', 'identify.company')->prefix('v1')->group(funct
         //fare management routes
 
         // trip management routes
-        Route::apiResource('trips',TripController::class)->except(['create', 'edit']);
+        Route::apiResource('trips', TripController::class)->except(['create', 'edit']);
 
+        // Settings Routes
+        Route::get('/settings', [SettingsController::class, 'getSettings']);
+        Route::post('/settings', [SettingsController::class, 'saveSettings']);
+        Route::post('/settings/test-stripe', [SettingsController::class, 'testStripeConnection']);
     });
 
 
@@ -90,4 +95,3 @@ Route::middleware('auth:sanctum', 'identify.company')->prefix('v1')->group(funct
 
 // --- Webhook Routes ---
 Route::post('/v1/stripe/webhook', [WebhookController::class, 'handleStripeWebhook']);
-

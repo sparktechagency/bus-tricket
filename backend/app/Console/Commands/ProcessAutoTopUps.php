@@ -29,12 +29,12 @@ class ProcessAutoTopUps extends Command
      public function handle()
     {
         $this->info('Starting to process auto top-ups...');
-        Stripe::setApiKey(config('services.stripe.secret'));
+        // Stripe::setApiKey(config('services.stripe.secret'));
 
         // Find wallets where the balance is less than their specific threshold.
         $walletsToTopUp = PassengerWallet::where('auto_topup_enabled', true)
                                         ->whereColumn('balance', '<', 'auto_topup_threshold')
-                                        ->with(['user', 'user.paymentMethods'])
+                                        ->with(['user.company', 'user.paymentMethods'])
                                         ->get();
 
         if ($walletsToTopUp->isEmpty()) {
@@ -46,14 +46,18 @@ class ProcessAutoTopUps extends Command
 
         foreach ($walletsToTopUp as $wallet) {
             $user = $wallet->user;
+            $company = $user->company;
             $defaultPaymentMethod = $user->paymentMethods->where('is_default', true)->first();
             $topUpAmount = $wallet->auto_topup_amount; // Use the dynamic amount from the wallet
 
-            if ($user->stripe_customer_id && $defaultPaymentMethod && $topUpAmount > 0) {
+            if ($company && $company->stripe_secret_key && $user->stripe_customer_id && $defaultPaymentMethod && $topUpAmount > 0) {
                 try {
+                    // Set the API key for this specific company just before the API call.
+                    Stripe::setApiKey($company->stripe_secret_key);
+
                     // Create a pending transaction record first.
                     $transaction = $user->transactions()->create([
-                        // 'company_id' => $user->company_id, // Ensure company_id is set
+                        'company_id' => $company->id, // Ensure company_id is set
                         'type' => 'AutoTopUp',
                         'amount' => $topUpAmount,
                         'status' => 'pending',
